@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 
-function StatsTab({ settings, gameScores, onOpenSettings, onResetScores }) {
+function StatsTab({ settings, onOpenSettings }) {
   const [timeElapsed, setTimeElapsed] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [timeUntilVisit, setTimeUntilVisit] = useState(null);
+  const [todayResults, setTodayResults] = useState({ wordle: null, connections: null });
 
-  const partner1Name = settings.partner1Name || 'Player 1';
-  const partner2Name = settings.partner2Name || 'Player 2';
+  const partner1Name = settings.partner1Name || 'You';
+  const partner2Name = settings.partner2Name || 'Partner';
 
   useEffect(() => {
     const calculateTimeElapsed = () => {
@@ -46,8 +47,22 @@ function StatsTab({ settings, gameScores, onOpenSettings, onResetScores }) {
       setTimeUntilVisit({ days, hours, minutes, seconds, passed: false });
     };
 
+    const loadTodayResults = () => {
+      const today = new Date();
+      const dateKey = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+
+      const wordleResult = localStorage.getItem(`wordle-${dateKey}`);
+      const connectionsResult = localStorage.getItem(`connections-${dateKey}`);
+
+      setTodayResults({
+        wordle: wordleResult ? JSON.parse(wordleResult) : null,
+        connections: connectionsResult ? JSON.parse(connectionsResult) : null,
+      });
+    };
+
     calculateTimeElapsed();
     calculateTimeUntilVisit();
+    loadTodayResults();
 
     const interval = setInterval(() => {
       calculateTimeElapsed();
@@ -68,9 +83,12 @@ function StatsTab({ settings, gameScores, onOpenSettings, onResetScores }) {
     });
   };
 
-  const totalGames = (gameScores?.partner1?.wins || 0) + (gameScores?.partner2?.wins || 0);
-  const p1WinRate = totalGames > 0 ? Math.round((gameScores?.partner1?.wins / totalGames) * 100) : 0;
-  const p2WinRate = totalGames > 0 ? Math.round((gameScores?.partner2?.wins / totalGames) * 100) : 0;
+  const today = new Date();
+  const todayFormatted = today.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric'
+  });
 
   return (
     <div className="stats-tab">
@@ -147,59 +165,37 @@ function StatsTab({ settings, gameScores, onOpenSettings, onResetScores }) {
             )}
           </div>
 
-          {/* Game Scoreboard */}
-          <div className="stat-card scoreboard-card">
-            <h3>Game Scoreboard</h3>
-            <div className="scoreboard">
-              <div className="scoreboard-player">
-                <span className="scoreboard-name">{partner1Name}</span>
-                <span className="scoreboard-wins">{gameScores?.partner1?.wins || 0}</span>
-                <span className="scoreboard-label">wins</span>
-                <div className="win-rate-bar">
-                  <div className="win-rate-fill p1" style={{ width: `${p1WinRate}%` }}></div>
-                </div>
-                <span className="win-rate-text">{p1WinRate}%</span>
-              </div>
-              <div className="scoreboard-vs">VS</div>
-              <div className="scoreboard-player">
-                <span className="scoreboard-name">{partner2Name}</span>
-                <span className="scoreboard-wins">{gameScores?.partner2?.wins || 0}</span>
-                <span className="scoreboard-label">wins</span>
-                <div className="win-rate-bar">
-                  <div className="win-rate-fill p2" style={{ width: `${p2WinRate}%` }}></div>
-                </div>
-                <span className="win-rate-text">{p2WinRate}%</span>
-              </div>
+          {/* Today's Games */}
+          <div className="stat-card today-games">
+            <h3>Today's Games - {todayFormatted}</h3>
+
+            <div className="today-game-row">
+              <span className="game-icon">🟩</span>
+              <span className="game-name">Wordle</span>
+              {todayResults.wordle ? (
+                <span className={`game-result ${todayResults.wordle.won ? 'won' : 'lost'}`}>
+                  {todayResults.wordle.won ? `${todayResults.wordle.attempts}/6` : 'X/6'}
+                </span>
+              ) : (
+                <span className="game-result pending">Not played</span>
+              )}
             </div>
 
-            {/* Game breakdown */}
-            <div className="game-breakdown">
-              <h4>By Game</h4>
-              <div className="game-scores-list">
-                <div className="game-score-row">
-                  <span className="game-name">Wordle</span>
-                  <span className="game-score-detail">
-                    {gameScores?.games?.wordle?.partner1 || 0} - {gameScores?.games?.wordle?.partner2 || 0}
-                  </span>
-                </div>
-                <div className="game-score-row">
-                  <span className="game-name">Connections</span>
-                  <span className="game-score-detail">
-                    {gameScores?.games?.connections?.partner1 || 0} - {gameScores?.games?.connections?.partner2 || 0}
-                  </span>
-                </div>
-                <div className="game-score-row">
-                  <span className="game-name">Tic Tac Toe</span>
-                  <span className="game-score-detail">
-                    {gameScores?.games?.tictactoe?.partner1 || 0} - {gameScores?.games?.tictactoe?.partner2 || 0}
-                  </span>
-                </div>
-              </div>
+            <div className="today-game-row">
+              <span className="game-icon">🔗</span>
+              <span className="game-name">Connections</span>
+              {todayResults.connections ? (
+                <span className={`game-result ${todayResults.connections.completed ? 'won' : 'lost'}`}>
+                  {todayResults.connections.groupsFound}/4 ({todayResults.connections.mistakes} mistakes)
+                </span>
+              ) : (
+                <span className="game-result pending">Not played</span>
+              )}
             </div>
 
-            <button className="reset-scores-btn" onClick={onResetScores}>
-              Reset All Scores
-            </button>
+            <p className="games-reminder">
+              Play daily puzzles and share results to compete!
+            </p>
           </div>
 
           <div className="stats-grid">
@@ -212,8 +208,8 @@ function StatsTab({ settings, gameScores, onOpenSettings, onResetScores }) {
               <span className="mini-stat-label">Months Together</span>
             </div>
             <div className="stat-card mini-stat">
-              <span className="mini-stat-value">{totalGames}</span>
-              <span className="mini-stat-label">Games Played</span>
+              <span className="mini-stat-value">{timeElapsed.days * 24 + timeElapsed.hours}</span>
+              <span className="mini-stat-label">Total Hours</span>
             </div>
             <div className="stat-card mini-stat">
               <span className="mini-stat-value">{settings.visitsCount || 0}</span>

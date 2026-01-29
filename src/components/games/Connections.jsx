@@ -41,42 +41,71 @@ const PUZZLE_SETS = [
       { category: 'Valentine Symbols', words: ['CUPID', 'ARROW', 'DOVE', 'RIBBON'], color: '#ba81c5' },
     ]
   },
+  {
+    groups: [
+      { category: 'Flowers', words: ['TULIP', 'DAISY', 'LILY', 'ORCHID'], color: '#f9df6d' },
+      { category: 'Desserts', words: ['PIE', 'TART', 'BROWNIE', 'SUNDAE'], color: '#a0c35a' },
+      { category: 'Romantic Comedies', words: ['CLUELESS', 'PRETTY', 'NOTTING', 'SLEEPLESS'], color: '#b0c4ef' },
+      { category: 'Text Abbreviations', words: ['ILY', 'XOXO', 'BAE', 'BFF'], color: '#ba81c5' },
+    ]
+  },
+  {
+    groups: [
+      { category: 'Precious Stones', words: ['DIAMOND', 'RUBY', 'EMERALD', 'SAPPHIRE'], color: '#f9df6d' },
+      { category: 'Seasons', words: ['SPRING', 'SUMMER', 'AUTUMN', 'WINTER'], color: '#a0c35a' },
+      { category: 'Music Genres', words: ['JAZZ', 'BLUES', 'SOUL', 'ROCK'], color: '#b0c4ef' },
+      { category: 'Zodiac Signs', words: ['LEO', 'VIRGO', 'LIBRA', 'ARIES'], color: '#ba81c5' },
+    ]
+  },
 ];
 
+const MAX_MISTAKES = 4;
+
 function Connections({ settings, onGameEnd }) {
-  const [puzzleIndex, setPuzzleIndex] = useState(0);
   const [words, setWords] = useState([]);
   const [selected, setSelected] = useState([]);
   const [found, setFound] = useState([]);
   const [mistakes, setMistakes] = useState(0);
-  const [currentPlayer, setCurrentPlayer] = useState(1);
-  const [scores, setScores] = useState({ player1: 0, player2: 0 });
   const [gameOver, setGameOver] = useState(false);
   const [message, setMessage] = useState('');
   const [shakeWords, setShakeWords] = useState([]);
-
-  const partner1Name = settings.partner1Name || 'Player 1';
-  const partner2Name = settings.partner2Name || 'Player 2';
-  const currentPlayerName = currentPlayer === 1 ? partner1Name : partner2Name;
-
-  const puzzle = PUZZLE_SETS[puzzleIndex];
-  const MAX_MISTAKES = 4;
+  const [todayKey, setTodayKey] = useState('');
+  const [puzzle, setPuzzle] = useState(null);
+  const [hasPlayedToday, setHasPlayedToday] = useState(false);
+  const [todayResult, setTodayResult] = useState(null);
 
   useEffect(() => {
-    initGame();
-  }, [puzzleIndex]);
+    // Generate daily puzzle based on date
+    const today = new Date();
+    const dateKey = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+    setTodayKey(dateKey);
 
-  const initGame = () => {
-    const allWords = puzzle.groups.flatMap(g => g.words);
-    setWords(shuffleArray([...allWords]));
-    setSelected([]);
-    setFound([]);
-    setMistakes(0);
-    setGameOver(false);
-    setMessage('');
-    setScores({ player1: 0, player2: 0 });
-    setCurrentPlayer(1);
-  };
+    // Use date as seed for consistent daily puzzle
+    const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+    const puzzleIndex = seed % PUZZLE_SETS.length;
+    const dailyPuzzle = PUZZLE_SETS[puzzleIndex];
+    setPuzzle(dailyPuzzle);
+
+    // Check if already played today
+    const savedResult = localStorage.getItem(`connections-${dateKey}`);
+    if (savedResult) {
+      const result = JSON.parse(savedResult);
+      setHasPlayedToday(true);
+      setTodayResult(result);
+      setFound(result.found);
+      setMistakes(result.mistakes);
+      setGameOver(true);
+
+      // Set up remaining words
+      const foundWords = result.found.flatMap(g => g.words);
+      const allWords = dailyPuzzle.groups.flatMap(g => g.words);
+      setWords(allWords.filter(w => !foundWords.includes(w)));
+    } else {
+      // Shuffle words for new game
+      const allWords = dailyPuzzle.groups.flatMap(g => g.words);
+      setWords(shuffleArray([...allWords]));
+    }
+  }, []);
 
   const shuffleArray = (array) => {
     const newArray = [...array];
@@ -99,7 +128,7 @@ function Connections({ settings, onGameEnd }) {
   };
 
   const handleSubmit = () => {
-    if (selected.length !== 4) {
+    if (selected.length !== 4 || !puzzle) {
       setMessage('Select exactly 4 words');
       return;
     }
@@ -110,31 +139,19 @@ function Connections({ settings, onGameEnd }) {
     );
 
     if (matchedGroup) {
-      setFound([...found, matchedGroup]);
+      const newFound = [...found, matchedGroup];
+      setFound(newFound);
       setSelected([]);
       setMessage(`Correct! "${matchedGroup.category}"`);
 
-      const newScores = { ...scores };
-      if (currentPlayer === 1) {
-        newScores.player1++;
-      } else {
-        newScores.player2++;
-      }
-      setScores(newScores);
-
-      if (found.length + 1 === 4) {
-        setGameOver(true);
-        const winner = newScores.player1 > newScores.player2 ? 'partner1' :
-                      newScores.player2 > newScores.player1 ? 'partner2' : 'tie';
-        if (onGameEnd && winner !== 'tie') {
-          onGameEnd(winner, 'connections');
-        }
+      if (newFound.length === 4) {
+        endGame(newFound, mistakes);
       }
     } else {
       // Check for "one away"
       const closeGroup = puzzle.groups.find(group => {
         const matchCount = selected.filter(word => group.words.includes(word)).length;
-        return matchCount === 3 && !found.includes(group);
+        return matchCount === 3 && !found.some(f => f.category === group.category);
       });
 
       setShakeWords([...selected]);
@@ -146,20 +163,30 @@ function Connections({ settings, onGameEnd }) {
         setMessage('Not quite!');
       }
 
-      setMistakes(mistakes + 1);
+      const newMistakes = mistakes + 1;
+      setMistakes(newMistakes);
       setSelected([]);
 
-      if (mistakes + 1 >= MAX_MISTAKES) {
-        setGameOver(true);
-        const winner = scores.player1 > scores.player2 ? 'partner1' :
-                      scores.player2 > scores.player1 ? 'partner2' : 'tie';
-        if (onGameEnd && winner !== 'tie') {
-          onGameEnd(winner, 'connections');
-        }
-      } else {
-        // Switch players on mistake
-        setCurrentPlayer(currentPlayer === 1 ? 2 : 1);
+      if (newMistakes >= MAX_MISTAKES) {
+        endGame(found, newMistakes);
       }
+    }
+  };
+
+  const endGame = (finalFound, finalMistakes) => {
+    setGameOver(true);
+    const result = {
+      found: finalFound,
+      mistakes: finalMistakes,
+      groupsFound: finalFound.length,
+      date: todayKey,
+      completed: finalFound.length === 4,
+    };
+    setTodayResult(result);
+    localStorage.setItem(`connections-${todayKey}`, JSON.stringify(result));
+
+    if (onGameEnd) {
+      onGameEnd(result.completed ? finalMistakes : 'X', 'connections');
     }
   };
 
@@ -169,8 +196,28 @@ function Connections({ settings, onGameEnd }) {
     setWords([...foundWords, ...shuffleArray(remainingWords)]);
   };
 
-  const nextPuzzle = () => {
-    setPuzzleIndex((puzzleIndex + 1) % PUZZLE_SETS.length);
+  const shareResult = () => {
+    if (!todayResult || !puzzle) return;
+
+    const emojiGrid = puzzle.groups.map(group => {
+      const wasFound = todayResult.found.some(f => f.category === group.category);
+      const color = group.color;
+      let emoji = '⬜';
+      if (color === '#f9df6d') emoji = '🟨';
+      else if (color === '#a0c35a') emoji = '🟩';
+      else if (color === '#b0c4ef') emoji = '🟦';
+      else if (color === '#ba81c5') emoji = '🟪';
+      return wasFound ? emoji.repeat(4) : '⬛⬛⬛⬛';
+    }).join('\n');
+
+    const text = `Our Love App - Connections\n${todayKey}\n${todayResult.groupsFound}/4 groups | ${todayResult.mistakes} mistakes\n\n${emojiGrid}`;
+
+    if (navigator.share) {
+      navigator.share({ text });
+    } else {
+      navigator.clipboard.writeText(text);
+      setMessage('Copied to clipboard! Send to your partner!');
+    }
   };
 
   const getWordStyle = (word) => {
@@ -184,30 +231,16 @@ function Connections({ settings, onGameEnd }) {
     return {};
   };
 
+  if (!puzzle) return <div>Loading...</div>;
+
   return (
     <div className="game-container connections-game">
-      <h2>Connections</h2>
-      <p className="game-subtitle">Find 4 groups of 4 related words!</p>
-
-      <div className="connections-scores">
-        <div className={`conn-score ${currentPlayer === 1 && !gameOver ? 'active' : ''}`}>
-          <span className="player-name">{partner1Name}</span>
-          <span className="player-score">{scores.player1}</span>
-        </div>
-        <div className={`conn-score ${currentPlayer === 2 && !gameOver ? 'active' : ''}`}>
-          <span className="player-name">{partner2Name}</span>
-          <span className="player-score">{scores.player2}</span>
-        </div>
-      </div>
-
-      {!gameOver && (
-        <div className="current-turn">
-          <strong>{currentPlayerName}'s turn</strong>
-        </div>
-      )}
+      <h2>Daily Connections</h2>
+      <p className="game-subtitle">Same puzzle for both - who solves it with fewer mistakes?</p>
+      <p className="date-indicator">{todayKey}</p>
 
       <div className="mistakes-display">
-        {Array(MAX_MISTAKES).fill(null).map((_, i) => (
+        Mistakes: {Array(MAX_MISTAKES).fill(null).map((_, i) => (
           <span key={i} className={`mistake-dot ${i < mistakes ? 'used' : ''}`}>●</span>
         ))}
       </div>
@@ -221,19 +254,20 @@ function Connections({ settings, onGameEnd }) {
       ))}
 
       {/* Word grid */}
-      <div className="connections-grid">
-        {words.filter(w => !found.some(g => g.words.includes(w))).map((word, i) => (
-          <button
-            key={word}
-            className={`conn-word ${selected.includes(word) ? 'selected' : ''} ${shakeWords.includes(word) ? 'shake' : ''}`}
-            style={getWordStyle(word)}
-            onClick={() => handleWordClick(word)}
-            disabled={gameOver}
-          >
-            {word}
-          </button>
-        ))}
-      </div>
+      {!gameOver && (
+        <div className="connections-grid">
+          {words.filter(w => !found.some(g => g.words.includes(w))).map((word) => (
+            <button
+              key={word}
+              className={`conn-word ${selected.includes(word) ? 'selected' : ''} ${shakeWords.includes(word) ? 'shake' : ''}`}
+              style={getWordStyle(word)}
+              onClick={() => handleWordClick(word)}
+            >
+              {word}
+            </button>
+          ))}
+        </div>
+      )}
 
       {message && <p className="conn-message">{message}</p>}
 
@@ -252,23 +286,18 @@ function Connections({ settings, onGameEnd }) {
       )}
 
       {gameOver && (
-        <div className="game-over-section">
-          <div className={`result-card ${scores.player1 !== scores.player2 ? 'match' : ''}`}>
-            {scores.player1 > scores.player2 ? (
-              <h3>{partner1Name} wins!</h3>
-            ) : scores.player2 > scores.player1 ? (
-              <h3>{partner2Name} wins!</h3>
-            ) : (
-              <h3>It's a tie!</h3>
-            )}
-            <p>{partner1Name}: {scores.player1} | {partner2Name}: {scores.player2}</p>
+        <div className="result-section">
+          <div className={`result-card ${todayResult?.completed ? 'match' : 'no-match'}`}>
+            <h3>{todayResult?.completed ? 'Puzzle Complete!' : 'Out of Guesses!'}</h3>
+            <p>{todayResult?.groupsFound}/4 groups found</p>
+            <p>{todayResult?.mistakes} mistakes</p>
           </div>
 
-          {/* Show remaining groups */}
-          {found.length < 4 && (
+          {/* Show remaining groups if not completed */}
+          {!todayResult?.completed && (
             <div className="remaining-groups">
               <p>Remaining groups:</p>
-              {puzzle.groups.filter(g => !found.includes(g)).map((group, i) => (
+              {puzzle.groups.filter(g => !found.some(f => f.category === g.category)).map((group, i) => (
                 <div key={i} className="found-group small" style={{ backgroundColor: group.color }}>
                   <strong>{group.category}</strong>
                   <span>{group.words.join(', ')}</span>
@@ -277,9 +306,14 @@ function Connections({ settings, onGameEnd }) {
             </div>
           )}
 
-          <div className="action-buttons">
-            <button className="next-btn" onClick={nextPuzzle}>Next Puzzle</button>
-            <button className="skip-btn" onClick={initGame}>Replay This Puzzle</button>
+          <button className="share-btn" onClick={shareResult}>
+            Share Result with Partner
+          </button>
+
+          <div className="compare-section">
+            <h4>Compare Results</h4>
+            <p>Both play today's puzzle, then share your results to see who won!</p>
+            <p className="compare-note">Fewer mistakes = Winner</p>
           </div>
         </div>
       )}

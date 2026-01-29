@@ -1,9 +1,5 @@
 import { useState } from 'react';
 import WhosMostLikely from './games/WhosMostLikely';
-import TruthOrDare from './games/TruthOrDare';
-import WouldYouRather from './games/WouldYouRather';
-import LoveLanguageQuiz from './games/LoveLanguageQuiz';
-import TicTacToe from './games/TicTacToe';
 import Wordle from './games/Wordle';
 import Connections from './games/Connections';
 
@@ -13,58 +9,26 @@ function GamesTab({ settings, onGameEnd }) {
   const games = [
     {
       id: 'wordle',
-      title: 'Wordle',
-      description: 'One sets the word, the other guesses - NY Times style!',
+      title: 'Daily Wordle',
+      description: 'Same word for both - compete on fewer guesses!',
       emoji: '🟩',
       component: Wordle,
       tracked: true,
     },
     {
       id: 'connections',
-      title: 'Connections',
-      description: 'Find 4 groups of 4 related words - take turns!',
+      title: 'Daily Connections',
+      description: 'Same puzzle for both - compete on fewer mistakes!',
       emoji: '🔗',
       component: Connections,
       tracked: true,
     },
     {
-      id: 'tic-tac-toe',
-      title: 'Tic Tac Toe',
-      description: 'Classic PvP game - winner picks the next date activity!',
-      emoji: '⭕',
-      component: TicTacToe,
-      tracked: true,
-    },
-    {
       id: 'whos-most-likely',
       title: "Who's Most Likely To",
-      description: 'Vote on who would be more likely to do different things',
+      description: 'Fun questions to discuss together - not competitive',
       emoji: '🤔',
       component: WhosMostLikely,
-      tracked: false,
-    },
-    {
-      id: 'truth-or-dare',
-      title: 'Truth or Dare',
-      description: 'Classic game with a romantic twist',
-      emoji: '💋',
-      component: TruthOrDare,
-      tracked: false,
-    },
-    {
-      id: 'would-you-rather',
-      title: 'Would You Rather',
-      description: 'Make choices together and see if you match',
-      emoji: '⚖️',
-      component: WouldYouRather,
-      tracked: false,
-    },
-    {
-      id: 'love-language',
-      title: 'Love Language Quiz',
-      description: 'Discover how you prefer to give and receive love',
-      emoji: '💝',
-      component: LoveLanguageQuiz,
       tracked: false,
     },
   ];
@@ -86,12 +50,12 @@ function GamesTab({ settings, onGameEnd }) {
 
   return (
     <div className="games-tab">
-      <h2>Games & Questions</h2>
-      <p className="games-subtitle">Have fun together, even from a distance!</p>
+      <h2>Games</h2>
+      <p className="games-subtitle">Play together from anywhere!</p>
 
       <div className="games-section">
-        <h3 className="section-title">Competitive Games</h3>
-        <p className="section-subtitle">Win/loss tracked on scoreboard</p>
+        <h3 className="section-title">Daily Challenges</h3>
+        <p className="section-subtitle">New puzzle every day - share results to compare!</p>
         <div className="games-grid">
           {games.filter(g => g.tracked).map((game) => (
             <div
@@ -102,7 +66,7 @@ function GamesTab({ settings, onGameEnd }) {
               <span className="game-emoji">{game.emoji}</span>
               <h3>{game.title}</h3>
               <p>{game.description}</p>
-              <span className="tracked-badge">Tracked</span>
+              <span className="tracked-badge">Daily</span>
             </div>
           ))}
         </div>
@@ -123,6 +87,15 @@ function GamesTab({ settings, onGameEnd }) {
             </div>
           ))}
         </div>
+      </div>
+
+      <div className="how-to-play">
+        <h3>How to Play Together</h3>
+        <ol>
+          <li>Both of you play the daily puzzle on your own phones</li>
+          <li>When finished, tap "Share Result with Partner"</li>
+          <li>Compare results - fewer attempts/mistakes wins!</li>
+        </ol>
       </div>
     </div>
   );
