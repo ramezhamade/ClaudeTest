@@ -957,6 +957,456 @@
   transform: scale(1.05);
 }
 
+/* Scoreboard */
+.scoreboard-card {
+  text-align: center;
+}
+
+.scoreboard {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.scoreboard-player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.scoreboard-name {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.scoreboard-wins {
+  font-size: 3rem;
+  font-weight: 700;
+}
+
+.scoreboard-label {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  text-transform: uppercase;
+}
+
+.scoreboard-vs {
+  font-size: 1.2rem;
+  font-weight: 700;
+  opacity: 0.5;
+  padding: 0 15px;
+}
+
+.win-rate-bar {
+  width: 80%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  margin-top: 10px;
+  overflow: hidden;
+}
+
+.win-rate-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.win-rate-fill.p1 {
+  background: linear-gradient(90deg, #667eea, #764ba2);
+}
+
+.win-rate-fill.p2 {
+  background: linear-gradient(90deg, #f093fb, #f5576c);
+}
+
+.win-rate-text {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  margin-top: 5px;
+}
+
+.game-breakdown {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.game-breakdown h4 {
+  margin-bottom: 15px;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.game-scores-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.game-score-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 15px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.game-name {
+  font-weight: 500;
+}
+
+.game-score-detail {
+  font-weight: 700;
+}
+
+.reset-scores-btn {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.reset-scores-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Games Section */
+.games-section {
+  margin-bottom: 30px;
+}
+
+.section-title {
+  font-size: 1.1rem;
+  margin-bottom: 5px;
+}
+
+.section-subtitle {
+  font-size: 0.85rem;
+  opacity: 0.7;
+  margin-bottom: 15px;
+}
+
+.game-card.competitive {
+  border: 2px solid rgba(255, 215, 0, 0.5);
+  position: relative;
+}
+
+.tracked-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: linear-gradient(135deg, #ffd700, #ffaa00);
+  color: #000;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* Wordle Game */
+.wordle-game {
+  text-align: center;
+}
+
+.wordle-setup {
+  padding: 20px 0;
+}
+
+.wordle-input {
+  width: 100%;
+  max-width: 250px;
+  padding: 15px;
+  font-size: 1.5rem;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 8px;
+  border: none;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #333;
+  margin-bottom: 15px;
+}
+
+.wordle-input:focus {
+  outline: 3px solid rgba(255, 255, 255, 0.5);
+}
+
+.wordle-board {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.wordle-row {
+  display: flex;
+  gap: 8px;
+}
+
+.wordle-cell {
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  font-weight: 700;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+}
+
+.wordle-cell.correct {
+  background: #538d4e;
+}
+
+.wordle-cell.present {
+  background: #b59f3b;
+}
+
+.wordle-cell.absent {
+  background: #3a3a3c;
+}
+
+.wordle-form {
+  margin-bottom: 20px;
+}
+
+.wordle-keyboard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+.keyboard-row {
+  display: flex;
+  gap: 6px;
+}
+
+.keyboard-key {
+  min-width: 30px;
+  height: 45px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.3);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.keyboard-key:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.keyboard-key.correct {
+  background: #538d4e;
+}
+
+.keyboard-key.present {
+  background: #b59f3b;
+}
+
+.keyboard-key.absent {
+  background: #3a3a3c;
+}
+
+.keyboard-key.wide {
+  min-width: 60px;
+}
+
+.error-message {
+  color: #ff6b6b;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+/* Connections Game */
+.connections-game {
+  text-align: center;
+}
+
+.connections-scores {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 15px;
+}
+
+.conn-score {
+  padding: 10px 20px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.conn-score.active {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+.current-turn {
+  margin-bottom: 15px;
+  font-size: 1.1rem;
+}
+
+.mistakes-display {
+  margin-bottom: 15px;
+  font-size: 1.2rem;
+  letter-spacing: 5px;
+}
+
+.mistake-dot {
+  color: rgba(255, 255, 255, 0.3);
+  transition: color 0.3s ease;
+}
+
+.mistake-dot.used {
+  color: #ff6b6b;
+}
+
+.found-group {
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  color: #000;
+  text-align: center;
+}
+
+.found-group strong {
+  display: block;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.found-group span {
+  font-size: 0.9rem;
+}
+
+.found-group.small {
+  padding: 10px;
+  font-size: 0.85rem;
+}
+
+.connections-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+.conn-word {
+  padding: 15px 8px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+}
+
+.conn-word:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.conn-word.selected {
+  background: #5a5a5a;
+  transform: scale(0.95);
+}
+
+.conn-word.shake {
+  animation: shake 0.5s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.conn-message {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 15px;
+  min-height: 1.5em;
+}
+
+.connections-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.shuffle-btn,
+.deselect-btn {
+  padding: 10px 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.shuffle-btn:hover,
+.deselect-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.submit-btn {
+  padding: 10px 30px;
+  border: none;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.submit-btn:not(:disabled):hover {
+  transform: scale(1.05);
+}
+
+.game-over-section {
+  margin-top: 20px;
+}
+
+.remaining-groups {
+  margin: 20px 0;
+}
+
+.remaining-groups p {
+  margin-bottom: 10px;
+  opacity: 0.8;
+}
+
 /* Responsive */
 @media (max-width: 400px) {
   .time-display {
@@ -979,5 +1429,22 @@
 
   .ttt-cell {
     font-size: 2rem;
+  }
+
+  .wordle-cell {
+    width: 45px;
+    height: 45px;
+    font-size: 1.5rem;
+  }
+
+  .conn-word {
+    padding: 12px 5px;
+    font-size: 0.7rem;
+  }
+
+  .keyboard-key {
+    min-width: 26px;
+    height: 40px;
+    font-size: 0.8rem;
   }
 }

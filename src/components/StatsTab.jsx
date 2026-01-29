@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
 
-function StatsTab({ settings, onOpenSettings }) {
+function StatsTab({ settings, gameScores, onOpenSettings, onResetScores }) {
   const [timeElapsed, setTimeElapsed] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [timeUntilVisit, setTimeUntilVisit] = useState(null);
+
+  const partner1Name = settings.partner1Name || 'Player 1';
+  const partner2Name = settings.partner2Name || 'Player 2';
 
   useEffect(() => {
     const calculateTimeElapsed = () => {
@@ -65,10 +68,14 @@ function StatsTab({ settings, onOpenSettings }) {
     });
   };
 
+  const totalGames = (gameScores?.partner1?.wins || 0) + (gameScores?.partner2?.wins || 0);
+  const p1WinRate = totalGames > 0 ? Math.round((gameScores?.partner1?.wins / totalGames) * 100) : 0;
+  const p2WinRate = totalGames > 0 ? Math.round((gameScores?.partner2?.wins / totalGames) * 100) : 0;
+
   return (
     <div className="stats-tab">
       <div className="stats-header">
-        <h2>{settings.partner1Name || 'Partner 1'} & {settings.partner2Name || 'Partner 2'}</h2>
+        <h2>{partner1Name} & {partner2Name}</h2>
         <button className="settings-btn" onClick={onOpenSettings}>
           Settings
         </button>
@@ -140,6 +147,61 @@ function StatsTab({ settings, onOpenSettings }) {
             )}
           </div>
 
+          {/* Game Scoreboard */}
+          <div className="stat-card scoreboard-card">
+            <h3>Game Scoreboard</h3>
+            <div className="scoreboard">
+              <div className="scoreboard-player">
+                <span className="scoreboard-name">{partner1Name}</span>
+                <span className="scoreboard-wins">{gameScores?.partner1?.wins || 0}</span>
+                <span className="scoreboard-label">wins</span>
+                <div className="win-rate-bar">
+                  <div className="win-rate-fill p1" style={{ width: `${p1WinRate}%` }}></div>
+                </div>
+                <span className="win-rate-text">{p1WinRate}%</span>
+              </div>
+              <div className="scoreboard-vs">VS</div>
+              <div className="scoreboard-player">
+                <span className="scoreboard-name">{partner2Name}</span>
+                <span className="scoreboard-wins">{gameScores?.partner2?.wins || 0}</span>
+                <span className="scoreboard-label">wins</span>
+                <div className="win-rate-bar">
+                  <div className="win-rate-fill p2" style={{ width: `${p2WinRate}%` }}></div>
+                </div>
+                <span className="win-rate-text">{p2WinRate}%</span>
+              </div>
+            </div>
+
+            {/* Game breakdown */}
+            <div className="game-breakdown">
+              <h4>By Game</h4>
+              <div className="game-scores-list">
+                <div className="game-score-row">
+                  <span className="game-name">Wordle</span>
+                  <span className="game-score-detail">
+                    {gameScores?.games?.wordle?.partner1 || 0} - {gameScores?.games?.wordle?.partner2 || 0}
+                  </span>
+                </div>
+                <div className="game-score-row">
+                  <span className="game-name">Connections</span>
+                  <span className="game-score-detail">
+                    {gameScores?.games?.connections?.partner1 || 0} - {gameScores?.games?.connections?.partner2 || 0}
+                  </span>
+                </div>
+                <div className="game-score-row">
+                  <span className="game-name">Tic Tac Toe</span>
+                  <span className="game-score-detail">
+                    {gameScores?.games?.tictactoe?.partner1 || 0} - {gameScores?.games?.tictactoe?.partner2 || 0}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <button className="reset-scores-btn" onClick={onResetScores}>
+              Reset All Scores
+            </button>
+          </div>
+
           <div className="stats-grid">
             <div className="stat-card mini-stat">
               <span className="mini-stat-value">{Math.floor(timeElapsed.days / 7)}</span>
@@ -150,8 +212,8 @@ function StatsTab({ settings, onOpenSettings }) {
               <span className="mini-stat-label">Months Together</span>
             </div>
             <div className="stat-card mini-stat">
-              <span className="mini-stat-value">{timeElapsed.days * 24 + timeElapsed.hours}</span>
-              <span className="mini-stat-label">Total Hours</span>
+              <span className="mini-stat-value">{totalGames}</span>
+              <span className="mini-stat-label">Games Played</span>
             </div>
             <div className="stat-card mini-stat">
               <span className="mini-stat-value">{settings.visitsCount || 0}</span>

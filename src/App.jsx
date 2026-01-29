@@ -20,12 +20,70 @@ function App() {
         };
   });
 
+  const [gameScores, setGameScores] = useState(() => {
+    const saved = localStorage.getItem('loveAppGameScores');
+    return saved
+      ? JSON.parse(saved)
+      : {
+          partner1: { wins: 0, losses: 0 },
+          partner2: { wins: 0, losses: 0 },
+          games: {
+            wordle: { partner1: 0, partner2: 0 },
+            connections: { partner1: 0, partner2: 0 },
+            tictactoe: { partner1: 0, partner2: 0 },
+          }
+        };
+  });
+
   useEffect(() => {
     localStorage.setItem('loveAppSettings', JSON.stringify(settings));
   }, [settings]);
 
+  useEffect(() => {
+    localStorage.setItem('loveAppGameScores', JSON.stringify(gameScores));
+  }, [gameScores]);
+
   const handleSaveSettings = (newSettings) => {
     setSettings(newSettings);
+  };
+
+  const handleGameEnd = (winner, gameType) => {
+    if (winner === 'tie') return;
+
+    setGameScores(prev => {
+      const loser = winner === 'partner1' ? 'partner2' : 'partner1';
+      const newScores = {
+        ...prev,
+        [winner]: {
+          ...prev[winner],
+          wins: prev[winner].wins + 1,
+        },
+        [loser]: {
+          ...prev[loser],
+          losses: prev[loser].losses + 1,
+        },
+        games: {
+          ...prev.games,
+          [gameType]: {
+            ...prev.games[gameType],
+            [winner]: (prev.games[gameType]?.[winner] || 0) + 1,
+          }
+        }
+      };
+      return newScores;
+    });
+  };
+
+  const resetScores = () => {
+    setGameScores({
+      partner1: { wins: 0, losses: 0 },
+      partner2: { wins: 0, losses: 0 },
+      games: {
+        wordle: { partner1: 0, partner2: 0 },
+        connections: { partner1: 0, partner2: 0 },
+        tictactoe: { partner1: 0, partner2: 0 },
+      }
+    });
   };
 
   return (
@@ -38,10 +96,17 @@ function App() {
         {activeTab === 'stats' && (
           <StatsTab
             settings={settings}
+            gameScores={gameScores}
             onOpenSettings={() => setShowSettings(true)}
+            onResetScores={resetScores}
           />
         )}
-        {activeTab === 'games' && <GamesTab settings={settings} />}
+        {activeTab === 'games' && (
+          <GamesTab
+            settings={settings}
+            onGameEnd={handleGameEnd}
+          />
+        )}
       </main>
 
       <nav className="tab-navigation">

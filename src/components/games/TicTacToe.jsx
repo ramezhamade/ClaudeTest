@@ -1,9 +1,10 @@
 import { useState } from 'react';
 
-function TicTacToe({ settings }) {
+function TicTacToe({ settings, onGameEnd }) {
   const [board, setBoard] = useState(Array(9).fill(null));
   const [isXNext, setIsXNext] = useState(true);
   const [scores, setScores] = useState({ X: 0, O: 0 });
+  const [gameReported, setGameReported] = useState(false);
 
   const partner1Name = settings.partner1Name || 'Partner 1';
   const partner2Name = settings.partner2Name || 'Partner 2';
@@ -48,12 +49,19 @@ function TicTacToe({ settings }) {
         ...prev,
         [newResult.winner]: prev[newResult.winner] + 1,
       }));
+      // Report to global scoreboard
+      if (onGameEnd && !gameReported) {
+        const winner = newResult.winner === 'X' ? 'partner1' : 'partner2';
+        onGameEnd(winner, 'tictactoe');
+        setGameReported(true);
+      }
     }
   };
 
   const resetGame = () => {
     setBoard(Array(9).fill(null));
     setIsXNext(true);
+    setGameReported(false);
   };
 
   const resetScores = () => {
