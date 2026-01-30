@@ -11,9 +11,23 @@ const firebaseConfig = {
   databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const database = getDatabase(app);
+// Check if Firebase is configured
+export const isFirebaseConfigured = () => {
+  return !!(
+    firebaseConfig.apiKey &&
+    firebaseConfig.projectId &&
+    firebaseConfig.databaseURL
+  );
+};
+
+// Initialize Firebase only if configured
+let app = null;
+let database = null;
+
+if (isFirebaseConfigured()) {
+  app = initializeApp(firebaseConfig);
+  database = getDatabase(app);
+}
 
 // Generate a random couple code
 export const generateCoupleCode = () => {
@@ -27,6 +41,8 @@ export const generateCoupleCode = () => {
 
 // Create a new couple room
 export const createCoupleRoom = async (coupleCode, partnerName) => {
+  if (!database) throw new Error('Firebase not configured');
+
   const coupleRef = ref(database, `couples/${coupleCode}`);
   const snapshot = await get(coupleRef);
 
@@ -57,6 +73,8 @@ export const createCoupleRoom = async (coupleCode, partnerName) => {
 
 // Join an existing couple room
 export const joinCoupleRoom = async (coupleCode, partnerName) => {
+  if (!database) throw new Error('Firebase not configured');
+
   const coupleRef = ref(database, `couples/${coupleCode}`);
   const snapshot = await get(coupleRef);
 
@@ -80,6 +98,8 @@ export const joinCoupleRoom = async (coupleCode, partnerName) => {
 
 // Get couple data
 export const getCoupleData = async (coupleCode) => {
+  if (!database) return null;
+
   const coupleRef = ref(database, `couples/${coupleCode}`);
   const snapshot = await get(coupleRef);
 
@@ -92,6 +112,8 @@ export const getCoupleData = async (coupleCode) => {
 
 // Subscribe to couple data changes
 export const subscribeToCoupleData = (coupleCode, callback) => {
+  if (!database) return () => {};
+
   const coupleRef = ref(database, `couples/${coupleCode}`);
   return onValue(coupleRef, (snapshot) => {
     if (snapshot.exists()) {
@@ -102,6 +124,8 @@ export const subscribeToCoupleData = (coupleCode, callback) => {
 
 // Save game result
 export const saveGameResult = async (coupleCode, partnerId, gameType, dateKey, result) => {
+  if (!database) return;
+
   const gameRef = ref(database, `couples/${coupleCode}/games/${gameType}/${dateKey}/${partnerId}`);
   await set(gameRef, {
     ...result,
@@ -111,12 +135,16 @@ export const saveGameResult = async (coupleCode, partnerId, gameType, dateKey, r
 
 // Update settings
 export const updateSettings = async (coupleCode, settings) => {
+  if (!database) return;
+
   const settingsRef = ref(database, `couples/${coupleCode}/settings`);
   await set(settingsRef, settings);
 };
 
 // Update scores
 export const updateScores = async (coupleCode, scores) => {
+  if (!database) return;
+
   const scoresRef = ref(database, `couples/${coupleCode}/scores`);
   await set(scoresRef, scores);
 };

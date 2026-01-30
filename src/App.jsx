@@ -1,10 +1,35 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { isFirebaseConfigured } from './firebase';
 import { CoupleProvider, useCouple } from './context/CoupleContext';
 import CoupleSetup from './components/CoupleSetup';
 import StatsTab from './components/StatsTab';
 import GamesTab from './components/GamesTab';
 import Settings from './components/Settings';
 import './App.css';
+
+function FirebaseError() {
+  return (
+    <div className="app">
+      <div className="firebase-error">
+        <h1>Setup Required</h1>
+        <p>Firebase is not configured yet.</p>
+        <div className="error-instructions">
+          <h3>To fix this:</h3>
+          <ol>
+            <li>Go to <a href="https://console.firebase.google.com" target="_blank" rel="noopener noreferrer">Firebase Console</a></li>
+            <li>Create a new project</li>
+            <li>Enable Realtime Database</li>
+            <li>Add environment variables in Vercel Settings</li>
+            <li>Redeploy</li>
+          </ol>
+        </div>
+        <p className="error-hint">
+          Need the exact variable names? Check the .env.example file in the repo.
+        </p>
+      </div>
+    </div>
+  );
+}
 
 function AppContent() {
   const { coupleCode, coupleData, loading, isConnected, saveSettings, logout } = useCouple();
@@ -99,6 +124,11 @@ function AppContent() {
 }
 
 function App() {
+  // Check if Firebase is configured
+  if (!isFirebaseConfigured()) {
+    return <FirebaseError />;
+  }
+
   return (
     <CoupleProvider>
       <AppContent />
