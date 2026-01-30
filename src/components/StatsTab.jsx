@@ -1,14 +1,20 @@
 import { useState, useEffect } from 'react';
+import { useCouple } from '../context/CoupleContext';
 
 function StatsTab({ settings, onOpenSettings }) {
+  const { coupleData, partnerId, getMyName, getPartnerName, getOtherPartnerId, isConnected } = useCouple();
   const [timeElapsed, setTimeElapsed] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [timeUntilVisit, setTimeUntilVisit] = useState(null);
-  const [todayResults, setTodayResults] = useState({ wordle: null, connections: null });
+  const [todayKey, setTodayKey] = useState('');
 
-  const partner1Name = settings.partner1Name || 'You';
-  const partner2Name = settings.partner2Name || 'Partner';
+  const myName = getMyName();
+  const partnerName = getPartnerName();
 
   useEffect(() => {
+    const today = new Date();
+    const dateKey = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+    setTodayKey(dateKey);
+
     const calculateTimeElapsed = () => {
       if (!settings.anniversaryDate) return;
 
@@ -47,22 +53,8 @@ function StatsTab({ settings, onOpenSettings }) {
       setTimeUntilVisit({ days, hours, minutes, seconds, passed: false });
     };
 
-    const loadTodayResults = () => {
-      const today = new Date();
-      const dateKey = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
-
-      const wordleResult = localStorage.getItem(`wordle-${dateKey}`);
-      const connectionsResult = localStorage.getItem(`connections-${dateKey}`);
-
-      setTodayResults({
-        wordle: wordleResult ? JSON.parse(wordleResult) : null,
-        connections: connectionsResult ? JSON.parse(connectionsResult) : null,
-      });
-    };
-
     calculateTimeElapsed();
     calculateTimeUntilVisit();
-    loadTodayResults();
 
     const interval = setInterval(() => {
       calculateTimeElapsed();
@@ -83,6 +75,27 @@ function StatsTab({ settings, onOpenSettings }) {
     });
   };
 
+  // Get today's game results from Firebase
+  const getTodayResults = (gameType) => {
+    if (!coupleData?.games?.[gameType]?.[todayKey]) return { my: null, partner: null };
+
+    const todayGames = coupleData.games[gameType][todayKey];
+    const otherPartnerId = getOtherPartnerId();
+
+    return {
+      my: todayGames[partnerId] || null,
+      partner: todayGames[otherPartnerId] || null,
+    };
+  };
+
+  const wordleResults = getTodayResults('wordle');
+  const connectionsResults = getTodayResults('connections');
+
+  // Get overall scores
+  const scores = coupleData?.scores || { partner1: 0, partner2: 0 };
+  const myScore = scores[partnerId] || 0;
+  const partnerScore = scores[getOtherPartnerId()] || 0;
+
   const today = new Date();
   const todayFormatted = today.toLocaleDateString('en-US', {
     weekday: 'long',
@@ -93,10 +106,35 @@ function StatsTab({ settings, onOpenSettings }) {
   return (
     <div className="stats-tab">
       <div className="stats-header">
-        <h2>{partner1Name} & {partner2Name}</h2>
+        <h2>{myName} & {partnerName}</h2>
         <button className="settings-btn" onClick={onOpenSettings}>
           Settings
         </button>
+      </div>
+
+      {!isConnected() && (
+        <div className="connection-status">
+          <p>Waiting for {partnerName || 'partner'} to join...</p>
+          <p className="share-code-hint">Share your couple code from Settings!</p>
+        </div>
+      )}
+
+      {/* Scoreboard */}
+      <div className="stat-card scoreboard-card">
+        <h3>Game Scoreboard</h3>
+        <div className="scoreboard">
+          <div className="scoreboard-player">
+            <span className="scoreboard-name">{myName}</span>
+            <span className="scoreboard-wins">{myScore}</span>
+            <span className="scoreboard-label">wins</span>
+          </div>
+          <span className="scoreboard-vs">vs</span>
+          <div className="scoreboard-player">
+            <span className="scoreboard-name">{partnerName}</span>
+            <span className="scoreboard-wins">{partnerScore}</span>
+            <span className="scoreboard-label">wins</span>
+          </div>
+        </div>
       </div>
 
       {!settings.anniversaryDate ? (
@@ -164,59 +202,71 @@ function StatsTab({ settings, onOpenSettings }) {
               </>
             )}
           </div>
-
-          {/* Today's Games */}
-          <div className="stat-card today-games">
-            <h3>Today's Games - {todayFormatted}</h3>
-
-            <div className="today-game-row">
-              <span className="game-icon">🟩</span>
-              <span className="game-name">Wordle</span>
-              {todayResults.wordle ? (
-                <span className={`game-result ${todayResults.wordle.won ? 'won' : 'lost'}`}>
-                  {todayResults.wordle.won ? `${todayResults.wordle.attempts}/6` : 'X/6'}
-                </span>
-              ) : (
-                <span className="game-result pending">Not played</span>
-              )}
-            </div>
-
-            <div className="today-game-row">
-              <span className="game-icon">🔗</span>
-              <span className="game-name">Connections</span>
-              {todayResults.connections ? (
-                <span className={`game-result ${todayResults.connections.completed ? 'won' : 'lost'}`}>
-                  {todayResults.connections.groupsFound}/4 ({todayResults.connections.mistakes} mistakes)
-                </span>
-              ) : (
-                <span className="game-result pending">Not played</span>
-              )}
-            </div>
-
-            <p className="games-reminder">
-              Play daily puzzles and share results to compete!
-            </p>
-          </div>
-
-          <div className="stats-grid">
-            <div className="stat-card mini-stat">
-              <span className="mini-stat-value">{Math.floor(timeElapsed.days / 7)}</span>
-              <span className="mini-stat-label">Weeks Together</span>
-            </div>
-            <div className="stat-card mini-stat">
-              <span className="mini-stat-value">{Math.floor(timeElapsed.days / 30)}</span>
-              <span className="mini-stat-label">Months Together</span>
-            </div>
-            <div className="stat-card mini-stat">
-              <span className="mini-stat-value">{timeElapsed.days * 24 + timeElapsed.hours}</span>
-              <span className="mini-stat-label">Total Hours</span>
-            </div>
-            <div className="stat-card mini-stat">
-              <span className="mini-stat-value">{settings.visitsCount || 0}</span>
-              <span className="mini-stat-label">Visits So Far</span>
-            </div>
-          </div>
         </>
+      )}
+
+      {/* Today's Games */}
+      <div className="stat-card today-games">
+        <h3>Today's Games - {todayFormatted}</h3>
+
+        <div className="today-game-row">
+          <span className="game-icon">🟩</span>
+          <span className="game-name">Wordle</span>
+          <div className="game-results-duo">
+            <span className={`game-result ${wordleResults.my ? (wordleResults.my.won ? 'won' : 'lost') : 'pending'}`}>
+              {wordleResults.my ? (wordleResults.my.won ? `${wordleResults.my.attempts}/6` : 'X/6') : '-'}
+            </span>
+            <span className="result-separator">|</span>
+            <span className={`game-result ${wordleResults.partner ? (wordleResults.partner.won ? 'won' : 'lost') : 'pending'}`}>
+              {wordleResults.partner ? (wordleResults.partner.won ? `${wordleResults.partner.attempts}/6` : 'X/6') : '-'}
+            </span>
+          </div>
+        </div>
+
+        <div className="today-game-row">
+          <span className="game-icon">🔗</span>
+          <span className="game-name">Connections</span>
+          <div className="game-results-duo">
+            <span className={`game-result ${connectionsResults.my ? (connectionsResults.my.completed ? 'won' : 'lost') : 'pending'}`}>
+              {connectionsResults.my ? `${connectionsResults.my.groupsFound}/4` : '-'}
+            </span>
+            <span className="result-separator">|</span>
+            <span className={`game-result ${connectionsResults.partner ? (connectionsResults.partner.completed ? 'won' : 'lost') : 'pending'}`}>
+              {connectionsResults.partner ? `${connectionsResults.partner.groupsFound}/4` : '-'}
+            </span>
+          </div>
+        </div>
+
+        <div className="results-legend">
+          <span>{myName}</span>
+          <span>|</span>
+          <span>{partnerName}</span>
+        </div>
+
+        <p className="games-reminder">
+          Play daily puzzles together - fewer attempts wins!
+        </p>
+      </div>
+
+      {settings.anniversaryDate && (
+        <div className="stats-grid">
+          <div className="stat-card mini-stat">
+            <span className="mini-stat-value">{Math.floor(timeElapsed.days / 7)}</span>
+            <span className="mini-stat-label">Weeks Together</span>
+          </div>
+          <div className="stat-card mini-stat">
+            <span className="mini-stat-value">{Math.floor(timeElapsed.days / 30)}</span>
+            <span className="mini-stat-label">Months Together</span>
+          </div>
+          <div className="stat-card mini-stat">
+            <span className="mini-stat-value">{timeElapsed.days * 24 + timeElapsed.hours}</span>
+            <span className="mini-stat-label">Total Hours</span>
+          </div>
+          <div className="stat-card mini-stat">
+            <span className="mini-stat-value">{settings.visitsCount || 0}</span>
+            <span className="mini-stat-label">Visits So Far</span>
+          </div>
+        </div>
       )}
     </div>
   );

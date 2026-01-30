@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useCouple } from '../../context/CoupleContext';
 
 const PUZZLE_SETS = [
   {
@@ -61,7 +62,8 @@ const PUZZLE_SETS = [
 
 const MAX_MISTAKES = 4;
 
-function Connections({ settings, onGameEnd }) {
+function Connections({ settings }) {
+  const { coupleData, partnerId, saveGame, getMyName, getPartnerName, getOtherPartnerId, incrementScore } = useCouple();
   const [words, setWords] = useState([]);
   const [selected, setSelected] = useState([]);
   const [found, setFound] = useState([]);
@@ -71,8 +73,8 @@ function Connections({ settings, onGameEnd }) {
   const [shakeWords, setShakeWords] = useState([]);
   const [todayKey, setTodayKey] = useState('');
   const [puzzle, setPuzzle] = useState(null);
-  const [hasPlayedToday, setHasPlayedToday] = useState(false);
-  const [todayResult, setTodayResult] = useState(null);
+  const [myResult, setMyResult] = useState(null);
+  const [partnerResult, setPartnerResult] = useState(null);
 
   useEffect(() => {
     // Generate daily puzzle based on date
@@ -86,26 +88,35 @@ function Connections({ settings, onGameEnd }) {
     const dailyPuzzle = PUZZLE_SETS[puzzleIndex];
     setPuzzle(dailyPuzzle);
 
-    // Check if already played today
-    const savedResult = localStorage.getItem(`connections-${dateKey}`);
-    if (savedResult) {
-      const result = JSON.parse(savedResult);
-      setHasPlayedToday(true);
-      setTodayResult(result);
-      setFound(result.found);
-      setMistakes(result.mistakes);
-      setGameOver(true);
-
-      // Set up remaining words
-      const foundWords = result.found.flatMap(g => g.words);
-      const allWords = dailyPuzzle.groups.flatMap(g => g.words);
-      setWords(allWords.filter(w => !foundWords.includes(w)));
-    } else {
-      // Shuffle words for new game
-      const allWords = dailyPuzzle.groups.flatMap(g => g.words);
-      setWords(shuffleArray([...allWords]));
-    }
+    // Shuffle words for new game
+    const allWords = dailyPuzzle.groups.flatMap(g => g.words);
+    setWords(shuffleArray([...allWords]));
   }, []);
+
+  // Load results from Firebase
+  useEffect(() => {
+    if (!coupleData?.games?.connections || !todayKey || !puzzle) return;
+
+    const todayGames = coupleData.games.connections[todayKey];
+    if (todayGames) {
+      if (todayGames[partnerId]) {
+        const result = todayGames[partnerId];
+        setMyResult(result);
+        setFound(result.found || []);
+        setMistakes(result.mistakes || 0);
+        setGameOver(true);
+
+        // Set up remaining words
+        const foundWords = (result.found || []).flatMap(g => g.words);
+        const allWords = puzzle.groups.flatMap(g => g.words);
+        setWords(allWords.filter(w => !foundWords.includes(w)));
+      }
+      const otherPartnerId = getOtherPartnerId();
+      if (todayGames[otherPartnerId]) {
+        setPartnerResult(todayGames[otherPartnerId]);
+      }
+    }
+  }, [coupleData, todayKey, partnerId, puzzle, getOtherPartnerId]);
 
   const shuffleArray = (array) => {
     const newArray = [...array];
@@ -173,7 +184,7 @@ function Connections({ settings, onGameEnd }) {
     }
   };
 
-  const endGame = (finalFound, finalMistakes) => {
+  const endGame = async (finalFound, finalMistakes) => {
     setGameOver(true);
     const result = {
       found: finalFound,
@@ -182,13 +193,41 @@ function Connections({ settings, onGameEnd }) {
       date: todayKey,
       completed: finalFound.length === 4,
     };
-    setTodayResult(result);
-    localStorage.setItem(`connections-${todayKey}`, JSON.stringify(result));
+    setMyResult(result);
 
-    if (onGameEnd) {
-      onGameEnd(result.completed ? finalMistakes : 'X', 'connections');
+    // Save to Firebase
+    await saveGame('connections', todayKey, result);
+
+    // Check if we should update scores
+    if (partnerResult) {
+      determineWinner(result, partnerResult);
     }
   };
+
+  const determineWinner = async (myRes, partnerRes) => {
+    if (!myRes || !partnerRes) return;
+
+    // Winner: completed with fewer mistakes, or completed when other didn't
+    if (myRes.completed && !partnerRes.completed) {
+      await incrementScore(partnerId);
+    } else if (!myRes.completed && partnerRes.completed) {
+      await incrementScore(getOtherPartnerId());
+    } else if (myRes.completed && partnerRes.completed) {
+      if (myRes.mistakes < partnerRes.mistakes) {
+        await incrementScore(partnerId);
+      } else if (partnerRes.mistakes < myRes.mistakes) {
+        await incrementScore(getOtherPartnerId());
+      }
+      // Tie - no score update
+    }
+  };
+
+  // Check for winner when partner result comes in
+  useEffect(() => {
+    if (myResult && partnerResult) {
+      determineWinner(myResult, partnerResult);
+    }
+  }, [partnerResult]);
 
   const handleShuffle = () => {
     const remainingWords = words.filter(w => !found.some(g => g.words.includes(w)));
@@ -197,10 +236,10 @@ function Connections({ settings, onGameEnd }) {
   };
 
   const shareResult = () => {
-    if (!todayResult || !puzzle) return;
+    if (!myResult || !puzzle) return;
 
     const emojiGrid = puzzle.groups.map(group => {
-      const wasFound = todayResult.found.some(f => f.category === group.category);
+      const wasFound = myResult.found.some(f => f.category === group.category);
       const color = group.color;
       let emoji = '⬜';
       if (color === '#f9df6d') emoji = '🟨';
@@ -210,13 +249,13 @@ function Connections({ settings, onGameEnd }) {
       return wasFound ? emoji.repeat(4) : '⬛⬛⬛⬛';
     }).join('\n');
 
-    const text = `Our Love App - Connections\n${todayKey}\n${todayResult.groupsFound}/4 groups | ${todayResult.mistakes} mistakes\n\n${emojiGrid}`;
+    const text = `Our Love App - Connections\n${todayKey}\n${myResult.groupsFound}/4 groups | ${myResult.mistakes} mistakes\n\n${emojiGrid}`;
 
     if (navigator.share) {
       navigator.share({ text });
     } else {
       navigator.clipboard.writeText(text);
-      setMessage('Copied to clipboard! Send to your partner!');
+      setMessage('Copied to clipboard!');
     }
   };
 
@@ -229,6 +268,26 @@ function Connections({ settings, onGameEnd }) {
       return { backgroundColor: '#5a5a5a', color: '#fff' };
     }
     return {};
+  };
+
+  const getWinnerDisplay = () => {
+    if (!myResult || !partnerResult) return null;
+
+    if (myResult.completed && !partnerResult.completed) {
+      return <p className="winner-text you-won">{getMyName()} wins!</p>;
+    } else if (!myResult.completed && partnerResult.completed) {
+      return <p className="winner-text partner-won">{getPartnerName()} wins!</p>;
+    } else if (myResult.completed && partnerResult.completed) {
+      if (myResult.mistakes < partnerResult.mistakes) {
+        return <p className="winner-text you-won">{getMyName()} wins! ({myResult.mistakes} vs {partnerResult.mistakes} mistakes)</p>;
+      } else if (partnerResult.mistakes < myResult.mistakes) {
+        return <p className="winner-text partner-won">{getPartnerName()} wins! ({partnerResult.mistakes} vs {myResult.mistakes} mistakes)</p>;
+      } else {
+        return <p className="winner-text tie">It's a tie!</p>;
+      }
+    } else {
+      return <p className="winner-text tie">Both lost - try again tomorrow!</p>;
+    }
   };
 
   if (!puzzle) return <div>Loading...</div>;
@@ -272,29 +331,37 @@ function Connections({ settings, onGameEnd }) {
       {message && <p className="conn-message">{message}</p>}
 
       {!gameOver && (
-        <div className="connections-buttons">
-          <button className="shuffle-btn" onClick={handleShuffle}>Shuffle</button>
-          <button className="deselect-btn" onClick={() => setSelected([])}>Deselect All</button>
-          <button
-            className="submit-btn"
-            onClick={handleSubmit}
-            disabled={selected.length !== 4}
-          >
-            Submit
-          </button>
-        </div>
+        <>
+          <div className="connections-buttons">
+            <button className="shuffle-btn" onClick={handleShuffle}>Shuffle</button>
+            <button className="deselect-btn" onClick={() => setSelected([])}>Deselect All</button>
+            <button
+              className="submit-btn"
+              onClick={handleSubmit}
+              disabled={selected.length !== 4}
+            >
+              Submit
+            </button>
+          </div>
+
+          {partnerResult && (
+            <div className="partner-status">
+              <p>{getPartnerName()} has already played today!</p>
+            </div>
+          )}
+        </>
       )}
 
       {gameOver && (
         <div className="result-section">
-          <div className={`result-card ${todayResult?.completed ? 'match' : 'no-match'}`}>
-            <h3>{todayResult?.completed ? 'Puzzle Complete!' : 'Out of Guesses!'}</h3>
-            <p>{todayResult?.groupsFound}/4 groups found</p>
-            <p>{todayResult?.mistakes} mistakes</p>
+          <div className={`result-card ${myResult?.completed ? 'match' : 'no-match'}`}>
+            <h3>{myResult?.completed ? 'Puzzle Complete!' : 'Out of Guesses!'}</h3>
+            <p>{myResult?.groupsFound}/4 groups found</p>
+            <p>{myResult?.mistakes} mistakes</p>
           </div>
 
           {/* Show remaining groups if not completed */}
-          {!todayResult?.completed && (
+          {!myResult?.completed && (
             <div className="remaining-groups">
               <p>Remaining groups:</p>
               {puzzle.groups.filter(g => !found.some(f => f.category === g.category)).map((group, i) => (
@@ -307,13 +374,28 @@ function Connections({ settings, onGameEnd }) {
           )}
 
           <button className="share-btn" onClick={shareResult}>
-            Share Result with Partner
+            Share Result
           </button>
+          {message && <p className="success-message">{message}</p>}
 
           <div className="compare-section">
-            <h4>Compare Results</h4>
-            <p>Both play today's puzzle, then share your results to see who won!</p>
-            <p className="compare-note">Fewer mistakes = Winner</p>
+            <h4>Results</h4>
+            <div className="results-comparison">
+              <div className="player-result">
+                <span className="player-name">{getMyName()}</span>
+                <span className="result-score">
+                  {myResult?.completed ? `${myResult.groupsFound}/4 (${myResult.mistakes} mistakes)` : 'X'}
+                </span>
+              </div>
+              <span className="vs">vs</span>
+              <div className="player-result">
+                <span className="player-name">{getPartnerName()}</span>
+                <span className="result-score">
+                  {partnerResult ? (partnerResult.completed ? `${partnerResult.groupsFound}/4 (${partnerResult.mistakes} mistakes)` : 'X') : 'Waiting...'}
+                </span>
+              </div>
+            </div>
+            {getWinnerDisplay()}
           </div>
         </div>
       )}

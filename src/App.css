@@ -1591,3 +1591,372 @@
   opacity: 0.7;
   font-style: italic;
 }
+
+/* Couple Setup */
+.couple-setup {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+  padding: 20px;
+}
+
+.setup-card {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 25px;
+  padding: 40px 30px;
+  max-width: 400px;
+  width: 100%;
+  backdrop-filter: blur(10px);
+  text-align: center;
+}
+
+.setup-card h1 {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.setup-intro {
+  opacity: 0.9;
+  margin-bottom: 30px;
+  line-height: 1.5;
+}
+
+.setup-options {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.setup-option-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 25px 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.setup-option-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.02);
+}
+
+.option-icon {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.option-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.option-desc {
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.back-link {
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-bottom: 20px;
+  opacity: 0.8;
+}
+
+.back-link:hover {
+  opacity: 1;
+}
+
+.code-input {
+  text-align: center;
+  font-size: 1.5rem;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+}
+
+.submit-setup-btn {
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border: none;
+  border-radius: 15px;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 20px;
+  transition: transform 0.3s ease;
+}
+
+.submit-setup-btn:hover:not(:disabled) {
+  transform: scale(1.02);
+}
+
+.submit-setup-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.success-icon {
+  font-size: 3rem;
+  color: #4ade80;
+  margin-bottom: 15px;
+}
+
+.code-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.couple-code {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 15px 25px;
+  border-radius: 10px;
+}
+
+.copy-btn {
+  padding: 10px 20px;
+  background: rgba(255, 255, 255, 0.3);
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.waiting-text {
+  opacity: 0.8;
+  font-style: italic;
+  margin-bottom: 20px;
+}
+
+.setup-tips {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 15px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+/* Loading Screen */
+.loading-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+}
+
+.loading-heart {
+  font-size: 3rem;
+  animation: pulse 1s ease infinite;
+}
+
+/* Waiting Badge */
+.waiting-badge {
+  background: rgba(255, 193, 7, 0.3);
+  padding: 5px 15px;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  margin-top: 5px;
+}
+
+/* Connection Status */
+.connection-status {
+  text-align: center;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  margin-bottom: 20px;
+}
+
+.share-code-hint {
+  font-size: 0.85rem;
+  opacity: 0.7;
+  margin-top: 5px;
+}
+
+/* Settings Additions */
+.couple-code-section {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.couple-code-section label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.code-display-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.code-text {
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 3px;
+  flex: 1;
+}
+
+.copy-code-btn {
+  padding: 8px 15px;
+  background: rgba(255, 255, 255, 0.3);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.logout-section {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.logout-btn {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  border: 2px solid rgba(255, 100, 100, 0.5);
+  border-radius: 10px;
+  color: #ff6b6b;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.logout-confirm {
+  text-align: center;
+}
+
+.logout-confirm p {
+  margin-bottom: 15px;
+  font-size: 0.9rem;
+}
+
+.logout-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.cancel-logout-btn,
+.confirm-logout-btn {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.cancel-logout-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: #fff;
+}
+
+.confirm-logout-btn {
+  background: #ff6b6b;
+  border: none;
+  color: #fff;
+}
+
+/* Results Comparison */
+.results-comparison {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  margin: 15px 0;
+}
+
+.player-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 15px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  min-width: 100px;
+}
+
+.player-result .player-name {
+  font-size: 0.85rem;
+  opacity: 0.8;
+  margin-bottom: 5px;
+}
+
+.result-score {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.vs {
+  font-weight: 700;
+  opacity: 0.5;
+}
+
+.winner-text {
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-top: 10px;
+}
+
+.winner-text.you-won {
+  color: #4ade80;
+}
+
+.winner-text.partner-won {
+  color: #f5576c;
+}
+
+.winner-text.tie {
+  color: #ffd700;
+}
+
+.partner-status {
+  margin-top: 20px;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  text-align: center;
+}
+
+/* Game Results Duo */
+.game-results-duo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.result-separator {
+  opacity: 0.5;
+}
+
+.results-legend {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 15px;
+  font-size: 0.8rem;
+  opacity: 0.7;
+}

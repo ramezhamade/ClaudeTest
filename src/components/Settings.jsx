@@ -1,13 +1,12 @@
 import { useState } from 'react';
 
-function Settings({ settings, onSave, onClose }) {
+function Settings({ settings, onSave, onClose, coupleCode, onLogout }) {
   const [formData, setFormData] = useState({
-    partner1Name: settings.partner1Name || '',
-    partner2Name: settings.partner2Name || '',
     anniversaryDate: settings.anniversaryDate || '',
     nextVisitDate: settings.nextVisitDate || '',
     visitsCount: settings.visitsCount || 0,
   });
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -23,35 +22,36 @@ function Settings({ settings, onSave, onClose }) {
     onClose();
   };
 
+  const copyCode = () => {
+    navigator.clipboard.writeText(coupleCode);
+  };
+
+  const handleLogout = () => {
+    if (onLogout) {
+      onLogout();
+    }
+    onClose();
+  };
+
   return (
     <div className="settings-overlay">
       <div className="settings-modal">
         <h2>Settings</h2>
+
+        {coupleCode && (
+          <div className="couple-code-section">
+            <label>Your Couple Code</label>
+            <div className="code-display-inline">
+              <span className="code-text">{coupleCode}</span>
+              <button type="button" onClick={copyCode} className="copy-code-btn">
+                Copy
+              </button>
+            </div>
+            <span className="form-help">Share this code with your partner to connect</span>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="partner1Name">Your Name</label>
-            <input
-              type="text"
-              id="partner1Name"
-              name="partner1Name"
-              value={formData.partner1Name}
-              onChange={handleChange}
-              placeholder="Enter your name"
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="partner2Name">Partner's Name</label>
-            <input
-              type="text"
-              id="partner2Name"
-              name="partner2Name"
-              value={formData.partner2Name}
-              onChange={handleChange}
-              placeholder="Enter your partner's name"
-            />
-          </div>
-
           <div className="form-group">
             <label htmlFor="anniversaryDate">Anniversary Date</label>
             <input
@@ -97,6 +97,40 @@ function Settings({ settings, onSave, onClose }) {
             </button>
           </div>
         </form>
+
+        {onLogout && (
+          <div className="logout-section">
+            {!showLogoutConfirm ? (
+              <button
+                type="button"
+                className="logout-btn"
+                onClick={() => setShowLogoutConfirm(true)}
+              >
+                Log Out
+              </button>
+            ) : (
+              <div className="logout-confirm">
+                <p>Are you sure? You'll need the couple code to reconnect.</p>
+                <div className="logout-buttons">
+                  <button
+                    type="button"
+                    className="cancel-logout-btn"
+                    onClick={() => setShowLogoutConfirm(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="confirm-logout-btn"
+                    onClick={handleLogout}
+                  >
+                    Log Out
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
